@@ -30,7 +30,8 @@ class App extends React.Component {
       imageUrl : '',
       clarifiaApiRegions : [],
       isSignedIn : false,
-      route : 'register'
+      route : 'signin',
+      user : {}
     }
   }
 
@@ -70,6 +71,20 @@ class App extends React.Component {
       .then(result => JSON.parse(result, null, 2).outputs[0].data.regions)
       .then(regions => this.setState({clarifiaApiRegions : regions}))
       .catch(error => console.log('error', error));
+    fetch('http://localhost:3000/image', {
+      method : 'PUT',
+      headers : {
+        'Content-Type' : 'application/json'
+      },
+      body : JSON.stringify({id : this.state.user.id})
+    })
+    .then(res => res.json())
+    .then(id => {
+      const {user} = this.state;
+      user.entries++;
+      this.setState({user})
+    })
+    
   }
 
   onRouteChange = (route) => {
@@ -78,11 +93,15 @@ class App extends React.Component {
       isSignedIn = true;
     else
       isSignedIn = false
-    this.setState({route , isSignedIn});
+    this.setState({route , isSignedIn , imageUrl : ''});
+  }
+
+  setUser = (user) => {
+    this.setState({user});
   }
 
   render() {
-    const {route , isSignedIn , imageUrl , clarifiaApiRegions} = this.state ;
+    const {route , isSignedIn , imageUrl , clarifiaApiRegions ,user} = this.state ;
     return (
       <div>
         <Particles className='particles' params={particlesOptions}/>
@@ -91,13 +110,13 @@ class App extends React.Component {
           (route === 'home') 
           ? <>
               <Logo />
-              <Rank />
+              <Rank user = {user}/>
               <ImageLinkForm onInputChange={this.onInputChange} onButtonSubmit={this.onButtonSubmit} /> 
               <FaceRecognition  imageUrl={imageUrl} clarifiaApiRegions = {clarifiaApiRegions} />
             </>
           : (route === 'signin') 
-            ? <SignIn onRouteChange={this.onRouteChange} />
-            : <Register onRouteChange={this.onRouteChange} />
+            ? <SignIn setUser={this.setUser} onRouteChange={this.onRouteChange} />
+            : <Register setUser={this.setUser} onRouteChange={this.onRouteChange} />
         }
         
       </div>
